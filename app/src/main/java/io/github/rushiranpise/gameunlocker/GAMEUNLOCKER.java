@@ -37,7 +37,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
     };
 
     // Packages to Spoof as Xiaomi 13 Pro
-    private static final String[] packagesToChangeXI13 = {
+    private static final String[] packagesToChangeOP8P = {
         "com.netease.lztgglobal",
         "com.pubg.imobile",
         "com.pubg.krmobile",
@@ -127,7 +127,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
 
         // OnePlus
         if (Arrays.asList(packagesToChangeOP8P).contains(packageName)) {
-            propsToChangeXI13();
+            propsToChangeOP8P();
             XposedBridge.log("Spoofed " + packageName + " as Xiaomi 13 Pro");
         }
 
@@ -185,7 +185,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
 
     // OnePlus
     // Props to Spoof as Xiaomi 13 pro
-    private static void propsToChangeXI13() {
+    private static void propsToChangeOP8P() {
         setPropValue("MANUFACTURER", "Xiaomi");
         setPropValue("MODEL", "2210132G");
     }
