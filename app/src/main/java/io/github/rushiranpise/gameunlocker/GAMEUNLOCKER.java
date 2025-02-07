@@ -21,8 +21,6 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
     private static final String TAG = GAMEUNLOCKER.class.getSimpleName();
     // Packages to Spoof as ROG Phone 6
     private static final String[] packagesToChangeROG6 = {
-        "com.activision.callofduty.shooter",
-        "com.activision.callofudty.warzone",
         "com.ea.gp.fifamobile",
         "com.gameloft.android.ANMP.GloftA9HM",
         "com.madfingergames.legends",
@@ -38,8 +36,8 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         "com.garena.game.kgvn"
     };
 
-    // Packages to Spoof as OnePlus 8 Pro
-    private static final String[] packagesToChangeOP8P = {
+    // Packages to Spoof as Xiaomi 13 Pro
+    private static final String[] packagesToChangeXI13 = {
         "com.netease.lztgglobal",
         "com.pubg.imobile",
         "com.pubg.krmobile",
@@ -129,8 +127,8 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
 
         // OnePlus
         if (Arrays.asList(packagesToChangeOP8P).contains(packageName)) {
-            propsToChangeOP8P();
-            XposedBridge.log("Spoofed " + packageName + " as OnePlus 8 Pro");
+            propsToChangeXI13();
+            XposedBridge.log("Spoofed " + packageName + " as Xiaomi 13 Pro");
         }
 
         if (Arrays.asList(packagesToChangeOP9P).contains(packageName)) {
@@ -186,10 +184,10 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
     }
 
     // OnePlus
-    // Props to Spoof as OnePlus 8 Pro
-    private static void propsToChangeOP8P() {
-        setPropValue("MANUFACTURER", "OnePlus");
-        setPropValue("MODEL", "IN2020");
+    // Props to Spoof as Xiaomi 13 pro
+    private static void propsToChangeXI13() {
+        setPropValue("MANUFACTURER", "Xiaomi");
+        setPropValue("MODEL", "2210132G");
     }
 
     // Props to Spoof as OnePlus 9 Pro
@@ -222,7 +220,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
     // Props to Spoof as Xiaomi Mi 13 Pro
     private static void propsToChangeMI13P() {
         setPropValue("MANUFACTURER", "Xiaomi");
-        setPropValue("MODEL", "2210132C");
+        setPropValue("MODEL", "2210132G");
     }
 
     private static void setPropValue(String key, Object value) {
