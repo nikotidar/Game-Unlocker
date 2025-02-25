@@ -28,11 +28,12 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         "com.pearlabyss.blackdesertm.gl"
     };
 
-    // Packages to Spoof as Xperia 5
+    // Packages to Spoof as Lenovo tablet
     private static final String[] packagesToChangeXP5 = {
         "com.garena.game.codm",
         "com.tencent.tmgp.kr.codm",
         "com.vng.codmvn",
+        "com.activision.callofduty.shooter",
         "com.garena.game.kgvn"
     };
 
@@ -145,7 +146,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         // Sony
         if (Arrays.asList(packagesToChangeXP5).contains(packageName)) {
             propsToChangeXP5();
-            XposedBridge.log("Spoofed " + packageName + " as Sony Xperia 5");
+            XposedBridge.log("Spoofed " + packageName + " as Lenovo tablet");
         }
 
         // Xiaomi
@@ -206,8 +207,8 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
     // Sony
     // Props to Spoof as Sony Xperia 5
     private static void propsToChangeXP5() {
-        setPropValue("MANUFACTURER", "Sony");
-        setPropValue("MODEL", "SO-52A");
+        setPropValue("MANUFACTURER", "Lenovo");
+        setPropValue("MODEL", "Lenovo TB-9707F");
     }
 
     // Xiaomi
