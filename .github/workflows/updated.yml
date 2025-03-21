@@ -1,4 +1,4 @@
-name: Build APK
+name: Build
 
 on:
   workflow_dispatch:
@@ -73,7 +73,7 @@ jobs:
     - name: Upload APK as Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Game Unlocker
+        name: Game-Unlocker-v${{ env.APP_VERSION }}
         path: game-unlocker-v${{ env.APP_VERSION }}.apk
 
     - name: Create and Upload Release
@@ -86,11 +86,11 @@ jobs:
           echo "Error: APK file $APK_FILE not found!"
           exit 1
         fi
+        # Ensure title and asset name are properly quoted and formatted
         gh release create "${{ env.TAG_NAME }}" \
-          --title "${{ env.APP_VERSION }}" \
+          --title "Game Unlocker v${{ env.APP_VERSION }}" \
           --generate-notes \
           --prerelease \
-          "$APK_FILE#Game Unlocker APK v${{ env.APP_VERSION }}"
-        echo "Release created and APK uploaded with tag ${{ env.TAG_NAME }}"
+          "$APK_FILE:game-unlocker-v${{ env.APP_VERSION }}.apk"
+        echo "Release created with tag ${{ env.TAG_NAME }}"
       shell: bash
-      
