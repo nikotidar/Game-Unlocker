@@ -3,6 +3,7 @@ package io.github.rushiranpise.gameunlocker;
 import android.os.Build;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
 
     private static final String TAG = "GAMEUNLOCKER";
     private static final Map<String, Map<String, String>> SPOOF_PROPS = new HashMap<>();
+    private volatile boolean keepSpoofing = true; // Flag to control the spoofing thread
 
     static {
         // REDMAGIC 9
@@ -162,7 +164,7 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         SPOOF_PROPS.put("com.ea.gp.fifamobile", new HashMap<String, String>() {{
             put("BRAND", "Asus"); put("DEVICE", "ROG Phone 6"); put("MANUFACTURER", "Asus"); put("MODEL", "ASUS_AI2201");
         }});
-        SPOOF_PROPS.put("com.gameloft.android.ANMP.GloftA9HM", new HashMap<String, String>() {{
+        SPOOF_PROPS.put("com.gameloft.android.ANMP.GloftA8HM", new HashMap<String, String>() {{
             put("BRAND", "Asus"); put("DEVICE", "ROG Phone 6"); put("MANUFACTURER", "Asus"); put("MODEL", "ASUS_AI2201");
         }});
         SPOOF_PROPS.put("com.madfingergames.legends", new HashMap<String, String>() {{
@@ -192,73 +194,131 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         // Samsung S24 Ultra
         SPOOF_PROPS.put("com.ea.gp.fifamobile", new HashMap<String, String>() {{
             put("BRAND", "samsung"); put("DEVICE", "e3q"); put("MANUFACTURER", "samsung"); put("MODEL", "SM-S928B");
-        }}); // Note: Overlaps with ROG Phone 6, last entry wins in this map
+        }}); // Note: Overlaps with ROG Phone 6, last entry wins
     }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         String packageName = lpparam.packageName;
 
-        // Check if this package needs spoofing
         if (SPOOF_PROPS.containsKey(packageName)) {
-            spoofBuildProperties(lpparam, packageName);
-            hideXposed(lpparam);
-            XposedBridge.log("Spoofing " + packageName + " with enhanced anti-cheat protection");
+            try {
+                spoofBuildProperties(lpparam, packageName);
+                hideXposed(lpparam);
+                startSpoofingRepeater(packageName); // Start periodic spoofing
+                XposedBridge.log("Spoofing " + packageName + " with 5-second repetition and crash handling");
+            } catch (Exception e) {
+                XposedBridge.log("Error initializing spoofing for " + packageName + ": " + Log.getStackTraceString(e));
+            }
         }
     }
 
     private void spoofBuildProperties(XC_LoadPackage.LoadPackageParam lpparam, String packageName) {
         Map<String, String> props = SPOOF_PROPS.get(packageName);
 
-        // Hook Build field getters instead of setting them
-        XposedHelpers.findAndHookMethod("android.os.Build", lpparam.classLoader,
-            "getString", String.class, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    String key = (String) param.args[0];
-                    if (props.containsKey(key)) {
-                        param.setResult(props.get(key));
-                    }
-                }
-            });
+        // Initial static spoofing
+        setBuildProperties(props);
 
-        // Hook SystemProperties for consistency (some games check here)
-        XposedHelpers.findAndHookMethod("android.os.SystemProperties", lpparam.classLoader,
-            "get", String.class, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    String key = (String) param.args[0];
-                    if ("ro.product.brand".equals(key)) param.setResult(props.get("BRAND"));
-                    if ("ro.product.manufacturer".equals(key)) param.setResult(props.get("MANUFACTURER"));
-                    if ("ro.product.device".equals(key)) param.setResult(props.get("DEVICE"));
-                    if ("ro.product.model".equals(key)) param.setResult(props.get("MODEL"));
-                }
-            });
+        // Hook Build field getters
+        try {
+            XposedHelpers.findAndHookMethod("android.os.Build", lpparam.classLoader,
+                "getString", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        String key = (String) param.args[0];
+                        if (props.containsKey(key)) {
+                            param.setResult(props.get(key));
+                        }
+                    }
+                });
+        } catch (Exception e) {
+            XposedBridge.log("Failed to hook Build.getString for " + packageName + ": " + e.getMessage());
+        }
+
+        // Hook SystemProperties
+        try {
+            XposedHelpers.findAndHookMethod("android.os.SystemProperties", lpparam.classLoader,
+                "get", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        String key = (String) param.args[0];
+                        if ("ro.product.brand".equals(key)) param.setResult(props.get("BRAND"));
+                        if ("ro.product.manufacturer".equals(key)) param.setResult(props.get("MANUFACTURER"));
+                        if ("ro.product.device".equals(key)) param.setResult(props.get("DEVICE"));
+                        if ("ro.product.model".equals(key)) param.setResult(props.get("MODEL"));
+                    }
+                });
+        } catch (Exception e) {
+            XposedBridge.log("Failed to hook SystemProperties.get for " + packageName + ": " + e.getMessage());
+        }
     }
 
     private void hideXposed(XC_LoadPackage.LoadPackageParam lpparam) {
-        // Hook ClassLoader to hide Xposed traces
-        XposedHelpers.findAndHookMethod("java.lang.ClassLoader", lpparam.classLoader,
-            "loadClass", String.class, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    String className = (String) param.args[0];
-                    if (className.contains("Xposed") || className.contains("de.robv")) {
-                        param.setThrowable(new ClassNotFoundException("Hidden"));
+        try {
+            XposedHelpers.findAndHookMethod("java.lang.ClassLoader", lpparam.classLoader,
+                "loadClass", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        String className = (String) param.args[0];
+                        if (className.contains("Xposed") || className.contains("de.robv")) {
+                            param.setThrowable(new ClassNotFoundException("Hidden"));
+                        }
                     }
-                }
-            });
+                });
+        } catch (Exception e) {
+            XposedBridge.log("Failed to hook ClassLoader.loadClass: " + e.getMessage());
+        }
 
-        // Hook stack trace to remove Xposed references
-        XposedHelpers.findAndHookMethod("java.lang.Thread", lpparam.classLoader,
-            "getStackTrace", new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    StackTraceElement[] stack = (StackTraceElement[]) param.getResult();
-                    param.setResult(Arrays.stream(stack)
-                        .filter(e -> !e.getClassName().contains("Xposed"))
-                        .toArray(StackTraceElement[]::new));
+        try {
+            XposedHelpers.findAndHookMethod("java.lang.Thread", lpparam.classLoader,
+                "getStackTrace", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        StackTraceElement[] stack = (StackTraceElement[]) param.getResult();
+                        param.setResult(Arrays.stream(stack)
+                            .filter(e -> !e.getClassName().contains("Xposed"))
+                            .toArray(StackTraceElement[]::new));
+                    }
+                });
+        } catch (Exception e) {
+            XposedBridge.log("Failed to hook Thread.getStackTrace: " + e.getMessage());
+        }
+    }
+
+    private void startSpoofingRepeater(String packageName) {
+        Map<String, String> props = SPOOF_PROPS.get(packageName);
+        new Thread(() -> {
+            while (keepSpoofing) {
+                try {
+                    setBuildProperties(props);
+                    XposedBridge.log("Reapplied spoofing for " + packageName);
+                    Thread.sleep(5000); // Repeat every 5 seconds
+                } catch (InterruptedException e) {
+                    XposedBridge.log("Spoofing thread interrupted for " + packageName);
+                    break;
+                } catch (Exception e) {
+                    XposedBridge.log("Error in spoofing repeater for " + packageName + ": " + e.getMessage());
+                    // Continue running despite error to avoid stopping the loop
                 }
-            });
+            }
+        }).start();
+    }
+
+    private void setBuildProperties(Map<String, String> props) {
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            try {
+                Field field = Build.class.getDeclaredField(entry.getKey());
+                field.setAccessible(true);
+                field.set(null, entry.getValue());
+                field.setAccessible(false);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                XposedBridge.log("Failed to set Build." + entry.getKey() + " to " + entry.getValue() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    // Cleanup method (optional, not directly callable by Xposed, but good practice)
+    public void onPackageUnload() {
+        keepSpoofing = false; // Stop the thread when the package unloads
     }
 }
