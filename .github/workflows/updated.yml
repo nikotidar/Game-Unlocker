@@ -1,4 +1,4 @@
-name: Build
+name: Build APK
 
 on:
   workflow_dispatch:
@@ -86,11 +86,10 @@ jobs:
           echo "Error: APK file $APK_FILE not found!"
           exit 1
         fi
-        # Ensure title and asset name are properly quoted and formatted
         gh release create "${{ env.TAG_NAME }}" \
           --title "Game Unlocker v${{ env.APP_VERSION }}" \
           --generate-notes \
           --prerelease \
-          "$APK_FILE:game-unlocker-v${{ env.APP_VERSION }}.apk"
-        echo "Release created with tag ${{ env.TAG_NAME }}"
+          "$APK_FILE"
+        echo "Release created with tag ${{ env.TAG_NAME }} and APK uploaded"
       shell: bash
