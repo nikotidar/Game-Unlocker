@@ -152,12 +152,12 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
             put("BRAND", "POCO"); put("DEVICE", "POCO F5"); put("MANUFACTURER", "Xiaomi"); put("MODEL", "23049PCD8G");
         }});
 
-        // ROG Phone
+        // Realme 14
         SPOOF_PROPS.put("com.dts.freefireth", new HashMap<String, String>() {{
-            put("BRAND", "Asus"); put("DEVICE", "ROG Phone"); put("MANUFACTURER", "Asus"); put("MODEL", "ASUS_Z01QD");
+            put("BRAND", "Realme"); put("DEVICE", "Realme 14"); put("MANUFACTURER", "Realme"); put("MODEL", "RMX5070");
         }});
         SPOOF_PROPS.put("com.dts.freefirethmax", new HashMap<String, String>() {{
-            put("BRAND", "Asus"); put("DEVICE", "ROG Phone"); put("MANUFACTURER", "Asus"); put("MODEL", "ASUS_Z01QD");
+            put("BRAND", "Realme"); put("DEVICE", "Realme 14"); put("MANUFACTURER", "Realme"); put("MODEL", "RMX5070");
         }});
 
         // ROG Phone 6
