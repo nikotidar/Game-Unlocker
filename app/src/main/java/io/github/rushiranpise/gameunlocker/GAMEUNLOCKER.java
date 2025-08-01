@@ -184,6 +184,9 @@ public class GAMEUNLOCKER implements IXposedHookLoadPackage {
         SPOOF_PROPS.put("com.garena.game.codm", new HashMap<String, String>() {{
             put("BRAND", "Lenovo"); put("DEVICE", "TB-9707F"); put("MANUFACTURER", "Lenovo"); put("MODEL", "Lenovo TB-9707F");
         }});
+        SPOOF_PROPS.put("com.garena.game.df", new HashMap<String, String>() {{
+            put("BRAND", "Lenovo"); put("DEVICE", "TB-9707F"); put("MANUFACTURER", "Lenovo"); put("MODEL", "Lenovo TB-9707F");
+        }});
         SPOOF_PROPS.put("com.tencent.tmgp.kr.codm", new HashMap<String, String>() {{
             put("BRAND", "Lenovo"); put("DEVICE", "TB-9707F"); put("MANUFACTURER", "Lenovo"); put("MODEL", "Lenovo TB-9707F");
         }});
